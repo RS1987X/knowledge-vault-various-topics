@@ -90,6 +90,8 @@ Monetization shifts from “selling code access” to selling scarce complements
 
 What monetizes worse: charging simply for access to source code; small feature gating easily cloned by forks.
 
+## Source
+X handle @0xEricBrown
 ---
 
 ## Suggested next expansions
