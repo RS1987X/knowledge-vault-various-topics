@@ -1,0 +1,399 @@
+---
+meta:
+  title: "Engineering Axiom Atlas"
+  version: "2026-02-16"
+  purpose: >
+    A cross-field map that groups engineering problem types by shared axioms/assumptions,
+    so patterns (and reusable solution methods) become comparable across domains.
+  how_to_use:
+    - "Pick a real problem you have."
+    - "Identify which axioms/assumptions you are implicitly making."
+    - "Jump to the matching family; reuse canonical forms + standard toolchains."
+    - "Check 'failure_modes' to see when the mapping breaks."
+
+intuition:
+  big_idea: >
+    Many 'different' engineering problems are the same after you strip away domain nouns
+    and keep only the assumptions (axioms) about the world: linear vs nonlinear, smooth vs nonsmooth,
+    local vs nonlocal, stochastic vs worst-case, continuous vs discrete.
+    Those assumptions determine the canonical math object (operator, objective, PDE, graph, etc.),
+    and that object determines the toolbox (Fourier, FEM, convex optimization, DP, etc.).
+  why_this_creates_connections: >
+    Two fields connect when they share the same canonical form.
+    Example: resistor networks and logistics flows are both conservation-on-graphs.
+    Once you see that, you can port intuition (bottlenecks, cut sets, effective resistance)
+    and algorithms (max-flow/min-cut, Laplacian solvers) between them.
+  how_to_read_the_map:
+    nodes: "Problem families (clusters of axioms) are nodes."
+    edges: >
+      Edges indicate frequent reductions/rewrites:
+      e.g., Bayesian linear-Gaussian inference ↔ least squares ↔ Kalman filtering.
+    breaks_when: >
+      Each family has conditions where the axioms stop being a good approximation;
+      that is usually where you must switch families (e.g., from LTI to nonlinear/nonsmooth).
+
+axioms_glossary:
+  linearity_superposition: "Response to a sum of inputs equals sum of responses."
+  time_invariance: "System laws do not change with time shift; enables convolution/transfer functions."
+  convexity: "Any local optimum is global; feasible set has no 'holes' or nonconvex kinks."
+  gaussian_noise: "Uncertainty is well-modeled by normal distributions; makes inference quadratic."
+  locality_smoothness: "Nearby points/states behave similarly; derivatives/gradients are informative."
+  conservation_balance: "What goes in minus what goes out equals accumulation (plus sources/sinks)."
+  markov_property: "The present state summarizes the past for predicting the future."
+  worst_case_uncertainty: "Uncertainty is bounded but not probabilistic; plan for the adversary."
+  sparsity: "Most coefficients/features are zero or negligible in a suitable basis."
+  discreteness_integrality: "Key decisions are categorical; cannot be smoothly interpolated."
+  equilibrium_strategic_agents: "Multiple decision-makers optimize interacting objectives."
+
+families:
+  - id: lti_linearity
+    name: "LTI Linearity (Superposition + Time Invariance)"
+    axioms:
+      - linearity_superposition
+      - time_invariance
+      - locality_smoothness
+    canonical_forms:
+      - "Linear ODE/PDE operators"
+      - "Convolution: y = h * x"
+      - "Transfer function G(s), frequency response G(jω)"
+      - "Eigenmodes / modal decomposition"
+    typical_problems:
+      - "Small-signal circuits, filters, amplifiers"
+      - "Structural vibration (small deflection), acoustics"
+      - "Control design around an operating point"
+    methods_toolbox:
+      - "Fourier/Laplace transforms"
+      - "Bode/Nyquist stability margins"
+      - "Eigenvalue analysis, modal truncation"
+      - "Green's functions"
+    intuition: >
+      If superposition holds, you can decompose complex inputs into simpler pieces,
+      solve each, and add the results. Time invariance lets you characterize the entire
+      system with an impulse response or transfer function.
+    failure_modes:
+      - "Saturation, hysteresis, friction/contact"
+      - "Large deflections, strong coupling, turbulence"
+      - "Time-varying parameters, switching"
+
+  - id: conservation_pdes
+    name: "Conservation Laws (Local Balance / Flux Form)"
+    axioms:
+      - conservation_balance
+      - locality_smoothness
+    canonical_forms:
+      - "Divergence form PDEs: ∂t u + ∇·F(u) = S(u)"
+      - "Continuity / momentum / energy equations"
+    typical_problems:
+      - "Fluid flow (Navier–Stokes), compressible flow"
+      - "Heat transfer, mass transport, diffusion-advection"
+      - "Power/traffic analogies as flows"
+    methods_toolbox:
+      - "Finite volume / finite difference / FEM"
+      - "Riemann solvers, shock capturing"
+      - "CFD with closure models"
+    intuition: >
+      The governing constraint is accounting: stuff cannot disappear.
+      Most domain complexity is hidden in constitutive relations (closures) for fluxes.
+    failure_modes:
+      - "Poor closures (turbulence models), multiphase complexity"
+      - "Shocks/discontinuities require weak solutions"
+      - "Stiff source terms cause numerical instability"
+
+  - id: variational_energy
+    name: "Variational / Energy Minimization (Stationarity Principles)"
+    axioms:
+      - locality_smoothness
+    canonical_forms:
+      - "Minimize functional J[u]; Euler–Lagrange equations"
+      - "Principle of minimum potential energy"
+      - "Action minimization / least action"
+    typical_problems:
+      - "Structural equilibrium, elastic deformation"
+      - "Optics (Fermat), geodesics, minimal surfaces"
+      - "Optimal control (via Pontryagin / variational forms)"
+    methods_toolbox:
+      - "FEM as a variational discretization"
+      - "Adjoints for gradients"
+      - "Constrained optimization (KKT)"
+    intuition: >
+      Nature (and many engineered objectives) can be framed as 'pick the configuration
+      that makes a scalar score smallest'—often energy, time, orMismatch.
+    failure_modes:
+      - "Non-smooth energies (plasticity, damage), path dependence"
+      - "Many local minima (nonconvex landscapes)"
+
+  - id: convex_optimization
+    name: "Convex Optimization (Global-Optimality Geometry)"
+    axioms:
+      - convexity
+    canonical_forms:
+      - "min f(x) s.t. g(x) ≤ 0 with convex f, g"
+      - "Duality + KKT conditions"
+    typical_problems:
+      - "Resource allocation, scheduling relaxations"
+      - "Convex MPC, portfolio-like tradeoffs"
+      - "Regularized regression (ridge, LASSO as convex)"
+    methods_toolbox:
+      - "Interior-point methods"
+      - "ADMM / proximal gradient"
+      - "Dual decomposition"
+    intuition: >
+      Convexity means no traps: once you move downhill, you are heading toward the best.
+      This is why convex formulations scale and are reliable.
+    failure_modes:
+      - "True problem is discrete/nonconvex; convex model may be a relaxation"
+      - "Bad scaling/conditioning still causes numerical pain"
+
+  - id: gaussian_quadratic_lqg
+    name: "Linear-Quadratic-Gaussian (LQG) World"
+    axioms:
+      - linearity_superposition
+      - gaussian_noise
+    canonical_forms:
+      - "Linear dynamics + quadratic costs"
+      - "Riccati equations"
+      - "Kalman filter + LQR (separation principle)"
+    typical_problems:
+      - "Tracking, navigation, sensor fusion"
+      - "Stabilization with noisy measurements"
+    methods_toolbox:
+      - "Kalman / extended Kalman (approx)"
+      - "LQR, Riccati solvers"
+    intuition: >
+      When dynamics are linear and uncertainty is Gaussian, 'best' becomes algebraic:
+      beliefs stay Gaussian, and control/inference reduce to solving Riccati recursions.
+    failure_modes:
+      - "Non-Gaussian outliers, multimodal ambiguity"
+      - "Hard nonlinearities (angles, contacts), wrong models"
+
+  - id: least_squares_inference
+    name: "Least Squares (Gaussian Error Model)"
+    axioms:
+      - gaussian_noise
+      - locality_smoothness
+    canonical_forms:
+      - "min ||Ax - b||_2^2"
+      - "Normal equations, QR/SVD"
+    typical_problems:
+      - "Calibration, regression, parameter fitting"
+      - "Tomography / inverse problems (with regularization)"
+    methods_toolbox:
+      - "QR/SVD, Tikhonov regularization"
+      - "Gauss-Newton for nonlinear least squares"
+    intuition: >
+      Squared error corresponds to assuming errors are Gaussian and independent.
+      Geometry: you're projecting measurements onto a model subspace.
+    failure_modes:
+      - "Outliers/heavy tails → use robust losses"
+      - "Ill-conditioning / nonidentifiability"
+
+  - id: sparsity_compressibility
+    name: "Sparsity / Compressed Representations"
+    axioms:
+      - sparsity
+      - convexity
+    canonical_forms:
+      - "min ||Ax-b||_2^2 + λ||x||_1"
+      - "Basis pursuit / compressed sensing"
+    typical_problems:
+      - "Sparse fault detection, feature selection"
+      - "Sparse imaging / reconstruction"
+    methods_toolbox:
+      - "LASSO, ISTA/FISTA, OMP"
+    intuition: >
+      Many signals are simple in the right basis. Enforcing sparsity is a way of
+      injecting that simplicity to beat underdetermined measurements.
+    failure_modes:
+      - "Signal isn't sparse; dictionary mismatch"
+      - "Highly correlated features reduce identifiability"
+
+  - id: markov_state_space
+    name: "Markov / State-Space Modeling"
+    axioms:
+      - markov_property
+      - gaussian_noise
+    canonical_forms:
+      - "State transition p(x_t|x_{t-1})"
+      - "HMMs, Bayesian filtering recursion"
+    typical_problems:
+      - "Reliability/queueing approximations"
+      - "Localization, tracking, hidden regimes"
+    methods_toolbox:
+      - "Forward-backward, Viterbi"
+      - "Particle filters, Kalman family"
+    intuition: >
+      The Markov axiom is a compression rule: keep only the state, discard the full history.
+      That makes sequential inference computationally feasible.
+    failure_modes:
+      - "Long memory, hidden context, nonstationarity"
+
+  - id: dynamic_programming
+    name: "Dynamic Programming (Optimal Substructure)"
+    axioms:
+      - markov_property
+    canonical_forms:
+      - "Bellman optimality equation"
+      - "Value functions / policies"
+    typical_problems:
+      - "Shortest path, scheduling, inventory"
+      - "Discrete-time optimal control"
+    methods_toolbox:
+      - "Value iteration, policy iteration"
+      - "Approximate DP / RL"
+    intuition: >
+      If a problem can be split into stages where the tail is independent given the state,
+      you can solve backward by reusing subproblem solutions.
+    failure_modes:
+      - "Curse of dimensionality"
+      - "Partial observability without augmentation"
+
+  - id: graphs_networks
+    name: "Graphs & Networks (Pairwise Relation Abstraction)"
+    axioms:
+      - conservation_balance
+      - locality_smoothness
+    canonical_forms:
+      - "Graph Laplacian, flows, cuts"
+      - "Kirchhoff-like laws on networks"
+    typical_problems:
+      - "Routing, dependency graphs, power grids"
+      - "Circuit graphs, distributed systems models"
+    methods_toolbox:
+      - "Max-flow/min-cut"
+      - "Spectral graph methods"
+      - "Laplacian solvers"
+    intuition: >
+      When interactions are mostly pairwise and structure matters more than geometry,
+      graphs capture the essential constraints and bottlenecks.
+    failure_modes:
+      - "Higher-order interactions need hypergraphs"
+      - "Time-varying topology breaks static analysis"
+
+  - id: robust_worst_case
+    name: "Robust / Worst-Case Design (Adversarial Uncertainty Sets)"
+    axioms:
+      - worst_case_uncertainty
+    canonical_forms:
+      - "min_x max_{δ∈Δ} f(x, δ)"
+      - "H-infinity norms and bounds"
+    typical_problems:
+      - "Robust control, safety envelopes"
+      - "Tolerancing, guaranteed feasibility"
+    methods_toolbox:
+      - "H∞ control"
+      - "Robust optimization (SOCP/SDP forms)"
+    intuition: >
+      Instead of betting on probabilities, you assume the world can choose the worst
+      allowed disturbance. This buys guarantees at the cost of conservatism.
+    failure_modes:
+      - "Uncertainty set Δ is wrong → false confidence"
+      - "Over-conservatism hurts performance"
+
+  - id: nonsmooth_complementarity
+    name: "Non-smooth Physics & Complementarity (Contact/Friction/Switching)"
+    axioms:
+      - discreteness_integrality
+    canonical_forms:
+      - "Complementarity constraints, variational inequalities"
+      - "Hybrid systems / switching dynamics"
+    typical_problems:
+      - "Robot contact, collisions, friction"
+      - "Power electronics switching, relays"
+    methods_toolbox:
+      - "Time-stepping, LCP solvers"
+      - "Nonsmooth Newton, hybrid simulation"
+    intuition: >
+      Many real systems change mode: stuck/sliding, on/off, in-contact/out-of-contact.
+      Smooth calculus fails at the switching surface; you need inequality logic.
+    failure_modes:
+      - "Chattering/Zeno behavior"
+      - "Numerical instability, ambiguous contact models"
+
+  - id: combinatorial_integral
+    name: "Combinatorial / Integer Decision Problems"
+    axioms:
+      - discreteness_integrality
+    canonical_forms:
+      - "MILP/MINLP"
+      - "NP-hard search over discrete structures"
+    typical_problems:
+      - "Scheduling, facility location, design selection"
+      - "Chip layout, assignment, routing with constraints"
+    methods_toolbox:
+      - "Branch-and-bound, cutting planes"
+      - "Heuristics/metaheuristics"
+    intuition: >
+      Discrete choices create a rugged landscape: you cannot 'nudge' a solution smoothly.
+      The main challenge is search and pruning, not calculus.
+    failure_modes:
+      - "Scale explosion"
+      - "Weak relaxations lead to slow solving"
+
+  - id: equilibrium_games
+    name: "Equilibria & Games (Interacting Optimizers)"
+    axioms:
+      - equilibrium_strategic_agents
+    canonical_forms:
+      - "Nash equilibrium"
+      - "Variational inequality formulations"
+    typical_problems:
+      - "Congestion and traffic equilibria"
+      - "Market clearing, multi-agent coordination"
+    methods_toolbox:
+      - "Best-response dynamics"
+      - "Convex-concave methods (when applicable)"
+    intuition: >
+      The 'solution' is not an optimum for one objective but a balance point where
+      no agent can improve unilaterally.
+    failure_modes:
+      - "Multiple equilibria, instability"
+      - "Nonconvex payoffs, strategic mis-specification"
+
+connections:
+  - from: least_squares_inference
+    to: gaussian_quadratic_lqg
+    type: "reduction"
+    explanation: >
+      Kalman filtering is sequential least squares under a linear-Gaussian model.
+      Both minimize quadratic error implied by Gaussian assumptions.
+  - from: graphs_networks
+    to: conservation_pdes
+    type: "discretization_analogy"
+    explanation: >
+      A graph flow model is a discrete conservation law: nodes are control volumes,
+      edges are fluxes, and Kirchhoff laws mirror divergence balance.
+  - from: variational_energy
+    to: convex_optimization
+    type: "subset"
+    explanation: >
+      Many energy minimizations become convex when the energy is convex,
+      enabling global guarantees and efficient solvers.
+  - from: lti_linearity
+    to: least_squares_inference
+    type: "linear_operator_shared"
+    explanation: >
+      Both rely on linear operators: in dynamics (system response) and in estimation (Ax=b).
+      Tools like SVD/eigenmodes appear in both as conditioning/mode insights.
+  - from: dynamic_programming
+    to: markov_state_space
+    type: "shared_axiom"
+    explanation: >
+      DP requires a state that summarizes the past (Markov property). Without it,
+      Bellman recursion does not close.
+
+recommended_vault_views:
+  - name: "Index by axiom"
+    description: "Start from an assumption (e.g., convexity) and see all families that rely on it."
+  - name: "Index by canonical form"
+    description: "Start from math object (graph Laplacian, Riccati, PDE) and see fields/problems."
+  - name: "Failure-mode navigator"
+    description: >
+      When a model fails (outliers, nonlinearity, switching), jump to the family whose axioms fit better
+      (e.g., from least squares → robust loss; from LTI → hybrid/nonsmooth).
+
+notes:
+  extensions_to_add_later:
+    - "Nonlinear dynamics & chaos (sensitivity, Lyapunov exponents)"
+    - "Nonlocal operators (fractional diffusion, integral equations)"
+    - "Topology/shape optimization links"
+    - "Category-theory style 'structure-preserving' mappings (if desired)",
