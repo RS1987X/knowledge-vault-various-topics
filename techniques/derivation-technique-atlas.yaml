@@ -16,3 +16,221 @@ This atlas provides various techniques for derivation in machine learning and da
 ## References
 - Reference 1: URL or citation.
 - Reference 2: URL or citation.
+
+---
+meta:
+  title: "Derivation & Solution Technique Atlas (Cross-Domain Engineering)"
+  version: "2026-02-16"
+  companion_to: "axioms/engineering-axiom-atlas.yaml"
+  purpose: >
+    Map the recurring techniques used to derive and compute solutions in engineering,
+    across domains, and make explicit the later-stage assumptions each technique needs.
+    This complements the Axiom Atlas by focusing on how we transform, approximate,
+    and solve problems after selecting a governing model/canonical form.
+
+intuition:
+  why_this_exists: >
+    The Axiom Atlas groups problems by foundational assumptions about the world/model
+    (linearity, convexity, conservation, Gaussian noise, etc.). In practice, success or failure
+    often hinges on later-stage choices: representation (time vs frequency), discretization (FEM/FVM),
+    solver strategy (Newton vs fixed-point), and stability/conditioning/identifiability.
+    This atlas makes those choices explicit and portable across fields.
+  how_to_use:
+    - "Start from your problem’s canonical form (or the closest family in the Axiom Atlas)."
+    - "Pick a technique cluster: transforms, approximations, optimization, sensitivity, numerics, UQ."
+    - "Check requires_assumptions and failure_modes before committing."
+    - "Use diagnostics to detect when the assumptions are violated."
+  relationship_to_axioms: >
+    Axioms tell you 'what class of model is justified'; techniques tell you
+    'what manipulations and solvers are valid and efficient' given additional assumptions.
+
+assumptions_glossary:
+  differentiability: "Derivatives exist and are meaningful; enables Newton/adjoints/linearization."
+  smoothness: "Quantities vary without discontinuities; gradients represent local behavior."
+  time_invariance: "Dynamics/response do not change with time shift; enables convolution transforms."
+  stationarity: "Statistics invariant over time; supports many frequency/statistical tools."
+  scale_separation: "Clear small/large parameter or fast/slow timescales exist."
+  low_rank_structure: "A few modes dominate (eigenvectors/POD); enables reduced-order models."
+  convexity: "No spurious local minima; duality and global convergence are reliable."
+  separability: "Objective/constraints decompose by subsystem/time/commodity."
+  contractivity: "Iterative map shrinks error; fixed-point iterations converge."
+  well_posedness: "Solution exists, is unique, and depends continuously on inputs."
+  conditioning: "Numerical sensitivity is manageable; matrices/operators not near-singular."
+  identifiability: "Parameters/states can be inferred uniquely enough from data/inputs."
+  bounded_uncertainty_set: "Uncertainty describable by credible bounds rather than probabilities."
+  stochastic_model_credibility: "Probability model (noise/priors) is credible for UQ/inference."
+  non_smooth_events: "Contacts/switches/discontinuities exist; smooth calculus may fail."
+  stiffness: "Multiple timescales make explicit time stepping unstable/inefficient."
+
+technique_clusters:
+  - id: transforms
+    name: "Modeling / Representation Transforms"
+  - id: approximation
+    name: "Approximation & Reduction"
+  - id: optimization
+    name: "Optimization Machinery (Derivation Patterns)"
+  - id: sensitivity
+    name: "Sensitivity / Gradients"
+  - id: numerics
+    name: "Numerical Solution Patterns"
+  - id: uq_robustness
+    name: "Uncertainty & Robustness"
+
+techniques:
+  - id: nondimensionalization_scaling
+    cluster: transforms
+    name: "Nondimensionalization & Scaling Analysis"
+    purpose: "Expose dominant balances, similarity parameters, and regime maps."
+    canonical_pattern: "Choose characteristic scales; rewrite in dimensionless groups (π terms)."
+    requires_assumptions: [well_posedness, scale_separation, conditioning]
+    produces:
+      - "Dimensionless parameters (Re, Pe, Bi, Strouhal, etc.)"
+      - "Reduced models by dominant-term truncation"
+      - "Regime classification (which physics matters when)"
+    common_domains: ["Fluid mechanics", "Heat/mass transfer", "Structures/materials", "Chemical reaction engineering", "Electromagnetics"]
+    failure_modes:
+      - "No clean characteristic scale (multi-regime, heterogeneous systems)"
+      - "Coupled scales invalidate naive truncations"
+    diagnostics:
+      - "Check magnitude of dimensionless groups across operating envelope."
+      - "Validate reduced terms by comparing residuals against full model."
+    links_to_axiom_families: [conservation_pdes, variational_energy]
+
+  - id: linearization_small_signal
+    cluster: transforms
+    name: "Linearization (Small-Signal / Tangent Model)"
+    purpose: "Approximate nonlinear systems locally to use linear tools (stability, control, inference)."
+    canonical_pattern: "f(x) ≈ f(x0) + J(x0)(x-x0); A = ∂f/∂x at operating point."
+    requires_assumptions: [differentiability, smoothness, conditioning]
+    produces: ["Local linear model (Jacobian, state matrix)", "LTI/LTV approximation"]
+    common_domains: ["Controls", "Circuits", "Structural dynamics (small deflection)", "Power system analysis"]
+    failure_modes: ["Large excursions leave validity region", "Non-smooth nonlinearities (friction, saturation, contact)"]
+    diagnostics: ["Compare nonlinear vs linear prediction error over expected perturbations.", "Monitor residual growth and Jacobian variation."]
+    links_to_axiom_families: [lti_linearity, gaussian_quadratic_lqg]
+
+  - id: frequency_domain_transform
+    cluster: transforms
+    name: "Frequency-Domain Transform (Fourier/Laplace)"
+    purpose: "Turn convolution/differential operators into algebra; separate modes by frequency."
+    canonical_pattern: "Time-domain ↔ frequency-domain; y = h*x ↔ Y(ω)=H(ω)X(ω)."
+    requires_assumptions: [time_invariance, stationarity, well_posedness]
+    produces: ["Transfer functions, spectra, frequency response", "Filter/stability margins"]
+    common_domains: ["Signals", "Vibration/acoustics", "Circuits", "Control systems"]
+    failure_modes: ["Time-varying/switching systems", "Strong nonlinearities create harmonics and intermodulation"]
+    diagnostics: ["Check time invariance (repeatability) and linearity (superposition tests)."]
+    links_to_axiom_families: [lti_linearity]
+
+  - id: variational_weak_form
+    cluster: transforms
+    name: "Variational / Weak Formulation"
+    purpose: "Recast PDE/physics into integral (weak) form suitable for FEM and constrained spaces."
+    canonical_pattern: "Multiply by test function; integrate by parts; enforce BCs weakly/strongly."
+    requires_assumptions: [well_posedness, smoothness]
+    produces: ["Weak form; bilinear forms; stiffness/mass matrices", "Natural boundary condition handling"]
+    common_domains: ["Structural mechanics", "Heat transfer", "Electromagnetics", "Fluid mechanics (some formulations)"]
+    failure_modes: ["Stabilization needed (advection-dominated, incompressible constraints)", "Incorrect function spaces → spurious modes"]
+    diagnostics: ["Patch tests; convergence with mesh refinement; check energy balance."]
+    links_to_axiom_families: [variational_energy, conservation_pdes]
+
+  - id: perturbation_asymptotics
+    cluster: approximation
+    name: "Perturbation Methods / Asymptotic Expansion"
+    purpose: "Approximate solutions via series in a small parameter; derive simplified laws."
+    canonical_pattern: "x = x0 + ε x1 + ε^2 x2 + … ; match orders in ε."
+    requires_assumptions: [scale_separation, smoothness, well_posedness]
+    produces: ["Leading-order solutions; correction terms", "Boundary layer models; simplified constitutive relations"]
+    common_domains: ["Aero/fluids", "Structures (buckling, slender-body)", "Chemical kinetics"]
+    failure_modes: ["No small parameter; divergent/asymptotic (nonconvergent) series", "Multiple competing small parameters"]
+    diagnostics: ["Compare truncation error with retained terms; validate against numerics/experiments."]
+    links_to_axiom_families: [conservation_pdes, lti_linearity]
+
+  - id: scale_separation_averaging
+    cluster: approximation
+    name: "Averaging / Singular Perturbation (Fast-Slow Reduction)"
+    purpose: "Remove fast dynamics; keep slow manifold for analysis/control."
+    canonical_pattern: "Identify ε x' = f(x,y), y' = g(x,y); reduce using quasi-steady assumptions."
+    requires_assumptions: [scale_separation, stiffness, well_posedness]
+    produces: ["Reduced slow dynamics; effective controllers; simplified simulation"]
+    common_domains: ["Control of physical systems", "Power electronics (averaged models)", "Vibration isolation", "Chemical reactor models"]
+    failure_modes: ["Resonance/interaction between scales", "Fast transients matter (events, switching)"]
+    diagnostics: ["Check spectral gap; compare reduced vs full trajectories on envelope metrics."]
+    links_to_axiom_families: [lti_linearity, nonsmooth_complementarity]
+
+  - id: reduced_order_modeling
+    cluster: approximation
+    name: "Reduced-Order Modeling (Projection / POD / Modal Truncation)"
+    purpose: "Project high-dimensional dynamics onto dominant modes for speed."
+    canonical_pattern: "x ≈ Φr a(t); project equations onto span(Φr)."
+    requires_assumptions: [low_rank_structure, conditioning, well_posedness]
+    produces: ["Low-dimensional surrogate dynamics", "Faster design sweeps / control synthesis"]
+    common_domains: ["Structural dynamics", "CFD and thermal models", "Acoustics", "Power network dynamics"]
+    failure_modes: ["Mode truncation misses rare but critical behaviors", "Nonlinear closure needed; instability in ROM"]
+    diagnostics: ["Energy captured by modes; error vs full-order on held-out scenarios."]
+    links_to_axiom_families: [lti_linearity, conservation_pdes]
+
+  - id: lagrange_kkt
+    cluster: optimization
+    name: "Lagrange Multipliers & KKT Conditions"
+    purpose: "Derive necessary conditions for constrained optima; unify constraints and objectives."
+    canonical_pattern: "Form L(x,λ,ν); set ∇x L = 0 plus feasibility and complementarity."
+    requires_assumptions: [differentiability, conditioning]
+    produces: ["Stationarity system; interpretable multipliers (shadow prices)", "Constraint handling blueprint for solvers"]
+    common_domains: ["Structural design", "Process engineering", "Control (optimal control discretizations)", "Operations research (continuous)"]
+    failure_modes: ["Constraint qualification violated; nonunique multipliers", "Non-smooth constraints"]
+    diagnostics: ["Check KKT residuals; sensitivity of multipliers; active set stability."]
+    links_to_axiom_families: [convex_optimization, variational_energy]
+
+  - id: duality_decomposition
+    cluster: optimization
+    name: "Duality & Decomposition"
+    purpose: "Split large problems; obtain bounds; create distributed/parallel solution methods."
+    canonical_pattern: "Form dual; separate by blocks; coordinate via prices/multipliers."
+    requires_assumptions: [convexity, separability]
+    produces: ["Distributed algorithms; dual bounds; coordination signals"]
+    common_domains: ["Network flows", "Power systems dispatch", "Large-scale resource allocation"]
+    failure_modes: ["Nonconvexity → duality gap", "Slow convergence without good step sizes/penalties"]
+    diagnostics: ["Track primal-dual gap; constraint violation; sensitivity to penalty parameters."]
+    links_to_axiom_families: [convex_optimization, graphs_networks]
+
+  - id: regularization_penalties
+    cluster: optimization
+    name: "Regularization (Tikhonov / Penalties / Barriers)"
+    purpose: "Stabilize ill-posedness, encode preferences, and improve conditioning."
+    canonical_pattern: "min data_fit(x) + λ R(x) (and/or barrier terms)."
+    requires_assumptions: [well_posedness, conditioning, stochastic_model_credibility]
+    produces: ["Stable solutions; controlled bias-variance tradeoff", "Constraint-enforcing interior solutions (barriers)"]
+    common_domains: ["Inverse problems", "Calibration", "Optimal design"]
+    failure_modes: ["Over-regularization removes real structure", "λ selection is brittle"]
+    diagnostics: ["L-curve, residual vs prior term balance, sensitivity of results to λ."]
+    links_to_axiom_families: [least_squares_inference, convex_optimization, sparsity_compressibility]
+
+  - id: adjoint_sensitivity
+    cluster: sensitivity
+    name: "Adjoint Method (Efficient Gradient Computation)"
+    purpose: "Compute gradients w.r.t. many parameters at cost ~one extra solve."
+    canonical_pattern: "Solve primal; solve adjoint; form gradient via inner products."
+    requires_assumptions: [differentiability, conditioning, well_posedness]
+    produces: ["Gradients for design optimization, parameter estimation, control"]
+    common_domains: ["CFD shape optimization", "Structural optimization", "Parameter estimation in PDE models"]
+    failure_modes: ["Discretize-then-optimize vs optimize-then-discretize mismatch", "Non-smooth events break differentiability"]
+    diagnostics: ["Gradient check vs finite differences/complex-step on small problems."]
+    links_to_axiom_families: [variational_energy, conservation_pdes, convex_optimization]
+
+  - id: newton_quasi_newton
+    cluster: numerics
+    name: "Newton / Quasi-Newton Methods"
+    purpose: "Fast local convergence for nonlinear equations and unconstrained optimization."
+    canonical_pattern: "x_{k+1} = x_k - J^{-1}(x_k) f(x_k) (with line search/trust region)."
+    requires_assumptions: [differentiability, conditioning]
+    produces: ["Rapid convergence near solution; Jacobian-based updates"]
+    common_domains: ["Power flow", "Implicit time stepping in FEM/FVM", "Nonlinear equilibrium in structures"]
+    failure_modes: ["Bad initial guess; singular/ill-conditioned Jacobian", "Non-smoothness"]
+    diagnostics: ["Monitor residual norm, step acceptance, Jacobian conditioning indicators."]
+    links_to_axiom_families: [conservation_pdes, variational_energy, least_squares_inference]
+
+  - id: fixed_point_iterations
+    cluster: numerics
+    name: "Fixed-Point Iteration / Successive Substitution"
+    purpose: "Solve coupled equations with simple iteration, often with damping."
+    canonical_pattern: "x_{k+1}=T(x_k); optionally relaxation with α."
+    requires
