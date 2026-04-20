@@ -1,0 +1,37 @@
+Section\tName\tValue\tUnits\tNotes
+profile\tfinancial_capital_F\t250000\tSEK\tCurrent investable portfolio
+profile\tmonthly_gross_income\t62000\tSEK\tGross monthly salary
+profile\tafter_tax_annual_income\t582000\tSEK\tApproximate annual net income used in PV calculation
+profile\twork_years_remaining\t30\tyears\tAssumption for human capital PV
+profile\tdiscount_rate_r\t0.04\tdecimal\tDiscount rate for income PV
+profile\tincome_growth_g\t0.01\tdecimal\tReal income growth assumption
+profile\thuman_capital_haircut_q\t0.60\tdecimal\tHaircut for job risk and correlation
+profile\tequity_like_share_beta_H\t0.40\tdecimal\tShare of human capital treated as equity-like
+market\trisk_free_rate_rf\t0.03\tdecimal\tCash/lending rate
+market\tborrow_rate_rb\t0.05\tdecimal\tBorrowing/financing rate
+market\tequity_vol_sigma\t0.17\tdecimal\tAnnualized equity volatility
+market\tkelly_fraction_c\t0.50\tdecimal\tFractional Kelly scaling
+valuation\tmu_expensive\t0.06\tdecimal\tExpected return under expensive valuation
+valuation\tmu_neutral\t0.08\tdecimal\tExpected return under neutral valuation
+valuation\tmu_cheap\t0.10\tdecimal\tExpected return under cheap valuation
+valuation\tpolicy_cap_expensive\t1.00\tx\tNo leverage when expensive
+valuation\tpolicy_cap_neutral\t1.10\tx\tMild leverage cap when neutral
+valuation\tpolicy_cap_cheap\t1.25\tx\tHigher leverage cap when cheap
+regions\tbase_us_weight\t0.65\tdecimal\tStarting equity weight for US
+regions\tbase_europe_weight\t0.20\tdecimal\tStarting equity weight for Europe
+regions\tbase_japan_weight\t0.10\tdecimal\tStarting equity weight for Japan
+regions\tbase_em_weight\t0.05\tdecimal\tStarting equity weight for Emerging Markets
+regions\tus_multiplier_expensive\t0.85\tx\tReduce US when expensive
+regions\tus_multiplier_neutral\t1.00\tx\tNeutral US multiplier
+regions\tus_multiplier_cheap\t1.10\tx\tIncrease US when cheap
+regions\teurope_multiplier_expensive\t1.00\tx\tNeutral Europe when expensive
+regions\teurope_multiplier_neutral\t1.05\tx\tSlight Europe tilt when neutral
+regions\teurope_multiplier_cheap\t1.15\tx\tIncrease Europe when cheap
+regions\tjapan_multiplier_expensive\t1.00\tx\tNeutral Japan when expensive
+regions\tjapan_multiplier_neutral\t1.05\tx\tSlight Japan tilt when neutral
+regions\tjapan_multiplier_cheap\t1.15\tx\tIncrease Japan when cheap
+regions\tem_multiplier_expensive\t1.00\tx\tNeutral EM when expensive
+regions\tem_multiplier_neutral\t1.00\tx\tNeutral EM when neutral
+regions\tem_multiplier_cheap\t1.10\tx\tIncrease EM when cheap
+instructions\tselected_mu_note\tChoose one of mu_expensive mu_neutral mu_cheap\ttext\tCopy chosen value into calculator.tsv selected_mu row
+instructions\tselected_policy_cap_note\tChoose one of policy_cap_expensive policy_cap_neutral policy_cap_cheap\ttext\tCopy chosen value into calculator.tsv selected_policy_cap row
